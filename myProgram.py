@@ -3,11 +3,39 @@ dirs = [[-1,0],[0,1],[1,0],[0,-1]]
 step_limit = 1000
 n = 8
 initQ(8)
+initPai(8)
 
 def initQ(size):
     Q = np.zeros((size,size,size,size))
 
+def initPai(size):
+    pai = np.zeros((size,size,size,size,4))
+
+def move(ax, ay, bx, by):
+    R = -1
+    temp_q  = []
+    temp_pai = pai[ax][ay][bx][by]
+    for i in range(0,len(dirs)):
+        new_ax = ax+dirs[i]
+        new_ay = by+dirs[i]
+        if (new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7):
+            temp_q.append(0)
+        else:
+            if(new_x==bx and new_y == by):
+                new_bx = bx + dirs[i]
+                new_by = by + dirs[i]
+
+    policy = pai[ax][ay][bx][by]
+    prob = -1
+    for dir in range(0,len(policy)):
+        if(policy[dir]>0.25):
+            prob = policy[dir]
+
+
+
 def MCEpisode(alpha, epsilon, complex_reward = false):
+    dir = -1
+
     bx = randrange(8)
     by = randrange(8)
     bcoord = [bx,by]
