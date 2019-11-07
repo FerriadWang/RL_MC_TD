@@ -11,27 +11,48 @@ def initQ(size):
 def initPai(size):
     pai = np.zeros((size,size,size,size,4))
 
-def move(ax, ay, bx, by):
+def move(ax, ay, bx, by, mode='naive'):
     R = -1
     temp_q  = []
     temp_pai = pai[ax][ay][bx][by]
-    for i in range(0,len(dirs)):
-        new_ax = ax+dirs[i]
-        new_ay = by+dirs[i]
-        if (new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7):
-            temp_q.append(0)
+    if(temp_pai[0]==0):
+        new_dir = randrange(4)
+    else:
+        rand = randrange(10)
+        max_prob = max(temp_pai)
+        if(rand<1):
+            sub_rand = randrange(4)
+            while(temp_pai[sub_rand]==max_prob):
+                sub_rand = randrange(4)
+            new_dir = sub_rand
         else:
-            if(new_x==bx and new_y == by):
-                new_bx = bx + dirs[i]
-                new_by = by + dirs[i]
-
-    policy = pai[ax][ay][bx][by]
-    prob = -1
-    for dir in range(0,len(policy)):
-        if(policy[dir]>0.25):
-            prob = policy[dir]
-
-
+            new_dir = temp_pai.index(max_prob)
+    new_ax = ax + dirs[new_dir]
+    new_ay = ay + dirs[new_dir]
+    if(mode=='naive'):
+        if (new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7):
+            return ax, ay, bx, by, new_dir, ax, ay, bx, by, -1;  # back to the same place
+        elif (new_ax == bx and new_ay == by):
+            new_bx = bx + dirs[new_dir]
+            new_by = by + dirs[new_dir]
+            if (new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7):
+                return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 10
+        else:
+            return ax, ay, bx, by, new_dir, new_ax, new_ay, bx, by, -1
+    else:
+        if (new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7):
+            return ax, ay, bx, by, new_dir, ax, ay, bx, by, -1;  # back to the same place
+        elif (new_ax == bx and new_ay == by):
+            new_bx = bx + dirs[new_dir]
+            new_by = by + dirs[new_dir]
+            if (new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7):
+                return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 10
+            else:
+                if (abs(new_bx - (n - 1) / 2) + abs(new_by - (n - 1) / 2) > abs(bx - (n - 1) / 2) + abs(
+                        by - (n - 1) / 2)):
+                    return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 1
+        else:
+            return ax, ay, bx, by, new_dir, new_ax, new_ay, bx, by, -1
 
 def MCEpisode(alpha, epsilon, complex_reward = false):
     dir = -1
@@ -43,32 +64,6 @@ def MCEpisode(alpha, epsilon, complex_reward = false):
     ay = randrange(8)
     acoord = [ax,ay]
     while(i<1000):
-        i = i+1
-        action = randrange(4)
-        ax = ax + dirs[action][0]
-        ay = ay + dirs[action][1]
-        if(ax<0 or ay<0 or ax>7 or ay >7):
-            ax = ax - dirs[action][0]
-            ay = ay - dirs[action][1]
-            reward = -1
-            #record ths s, a pair
-            continue
-        if(ax==bx and ay==by):
-            if (bx < 0 or by < 0 or bx > 7 or by > 7):
-                reward = 10
-                # record the s, a, r pair
-                continue;
-            dis_o = abs(bx-3.5)+abs(by-3.5)
-            bx = bx + dirs[action][0]
-            by = by + dirs[action][1]
-            dis_n = abs(bx-3.5)+abs(by-3.5)
-            if(dis_n>dis_o):
-                reward = 1
-                #record this s, a ,r pair
-                continue
-            else:
-                reward = -1
-                #record...
-                continue
+
 
     #Randomly assign  the bomb and the agent
