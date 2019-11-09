@@ -9,7 +9,7 @@ size = 8  # dimension of the grid
 gamma = 1  # no discount
 alpha = 0.1
 epsilon = 0.1
-max_episode = 10000  # total number of episodes to train on
+max_episode = 100000  # total number of episodes to train on
 method = 1  # 1 for MC, 2 for Q-Learning
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
 step_limit = 1000
@@ -55,10 +55,7 @@ def init_position():
 		ax = randrange(8)
 		ay = randrange(8)
 	return ax, ay, bx, by
-
-
-ax_init, ay_init, bx_init, by_init = init_position()  # initial position of agent and bomb
-
+# initial position of agent and bomb
 
 def move(ax, ay, bx, by, mode='naive'):
 	#print("moving...")
@@ -122,15 +119,7 @@ def MCUpdate(SARS):
 
 def MCEpisode(alpha, epsilon, pai, mode='naive'):
 	SARs = []
-	ax = 0
-	bx = 0
-	ay = 0
-	by = 0
-	while ax == bx and ay == by:
-		bx = randrange(8)
-		by = randrange(8)
-		ax = randrange(8)
-		ay = randrange(8)
+	ax, ay, bx, by = init_position()
 	i = 0
 	while i < 1000:
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
@@ -191,10 +180,32 @@ def update_policy(ax, ay, bx, by):
 		for i in range(4):
 			pai[ax][ay][bx][by][i] = (1 - epsilon) if i == max_q_index else epsilon / 3
 
-
-def q_learning(ax, ay, bx, by, mode, episode):
+def q_learning_test(ax,ay,bx,by,mode):
 	SARs = []
 	i = 0
+	while i < step_limit:
+		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
+		SARs.append([ax, ay, bx, by, new_dir, reward])
+
+		# update
+		update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward)
+		update_policy(ax, ay, bx, by)
+		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
+			break
+		else:  # update position
+			ax = new_ax
+			ay = new_ay
+			bx = new_bx
+			by = new_by
+			i = i + 1
+	if i != 1000:
+		for SAR in SARs:
+			print('agent location {ax}, {ay}, bomb location {bx},{by}, agent take action {dir} at directions {dirs}'.format(ax = SAR[0],ay = SAR[1],bx = SAR[2],by = SAR[3],dir=SAR[4],dirs = dirs))
+
+def q_learning(mode, episode):
+	SARs = []
+	i = 0
+	ax, ay, bx, by = init_position()
 	while i < step_limit:
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
 		SARs.append([ax, ay, bx, by, new_dir, reward])
@@ -225,7 +236,7 @@ def learn(mode='naive'):
 		if method == 1:
 			returns = MCEpisode(alpha, epsilon, pai, mode)
 		else:
-			returns = q_learning(ax_init, ay_init, bx_init, by_init, mode, i)
+			returns = q_learning(mode, i)
 		if returns != 10000:
 			total_return.append(returns)
 		i = i+1
@@ -250,6 +261,7 @@ def plot_episode():
 
 def main():
 	learn(mode='complex')  # run learning method
+	q_learning_test(5,0,4,1,mode = 'complex')
 	plot_episode()  # plot returns for each episode
 
 
