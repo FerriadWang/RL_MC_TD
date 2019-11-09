@@ -9,8 +9,8 @@ size = 8  # dimension of the grid
 gamma = 1  # no discount
 alpha = 0.1
 epsilon = 0.1
-max_episode = 100000  # total number of episodes to train on
-method = 1  # 1 for MC, 2 for Q-Learning
+max_episode = 50000  # total number of episodes to train on
+method = 1 # 1 for MC, 2 for Q-Learning
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
 step_limit = 1000
 agent_bomb_position = []  # store agent's and bomb's position in each step under optimal policy
@@ -19,11 +19,11 @@ total_return = []  # total return of each episode
 
 
 # command input
-# size = sys.argv[1]
-# alpha = sys.argv[2]
-# epsilon = sys.argv[3]
-# max_episode = sys.argv[4]
-# method = sys.argv[5]
+size = int(sys.argv[1])
+alpha = float(sys.argv[2])
+epsilon = float(sys.argv[3])
+max_episode = int(sys.argv[4])
+method = int(sys.argv[5])
 
 # initialize Q value function
 def initQ(size):
