@@ -10,7 +10,7 @@ gamma = 1  # no discount
 alpha = 0.1
 epsilon = 0.1
 max_episode = 10000  # total number of episodes to train on
-method = 2  # 1 for MC, 2 for Q-Learning
+method = 1  # 1 for MC, 2 for Q-Learning
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
 step_limit = 1000
 agent_bomb_position = []  # store agent's and bomb's position in each step under optimal policy
@@ -61,13 +61,14 @@ ax_init, ay_init, bx_init, by_init = init_position()  # initial position of agen
 
 
 def move(ax, ay, bx, by, mode='naive'):
+	#print("moving...")
 	temp_q = []
 	temp_pai = pai[ax][ay][bx][by]
 	new_ax = ax
 	new_ay = ay
 	new_bx = bx
 	new_by = by
-	if temp_pai[0] == 0:
+	if (temp_pai[0] == 0 or temp_pai[0]==0.25):
 		new_dir = randrange(4)
 	else:
 		rand = randrange(10)
@@ -110,8 +111,43 @@ def move(ax, ay, bx, by, mode='naive'):
 
 
 def MCUpdate(SARS):
-	return 1
+	G = 0
+	while(len(SARS)>0):
+		sub_SARS = SARS.pop();
+		G = sub_SARS[9] + gamma * G
+		update_q_value(sub_SARS[0],sub_SARS[1],sub_SARS[2],sub_SARS[3],sub_SARS[4],sub_SARS[5],sub_SARS[6],sub_SARS[7],sub_SARS[8],sub_SARS[9])
+		update_policy(sub_SARS[0],sub_SARS[1],sub_SARS[2],sub_SARS[3])
+	#print("updated")
+	return G
 
+def MCEpisode(alpha, epsilon, pai, mode='naive'):
+	SARs = []
+	ax = 0
+	bx = 0
+	ay = 0
+	by = 0
+	while ax == bx and ay == by:
+		bx = randrange(8)
+		by = randrange(8)
+		ax = randrange(8)
+		ay = randrange(8)
+	i = 0
+	while i < 1000:
+		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
+		#print("moved")
+		SARs.append([ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward])
+		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
+			break
+		else:
+			ax = new_ax
+			ay = new_ay
+			bx = new_bx
+			by = new_by
+			i = i + 1
+	if i != 1000:
+		return MCUpdate(SARs)
+	else:
+		return 10000  # do not count this episode
 
 def q_learning_result_update(SARS, episode):
 	returns = 0
@@ -121,7 +157,6 @@ def q_learning_result_update(SARS, episode):
 		if episode == max_episode - 1:
 			agent_bomb_position.append([sub_SARS[0], sub_SARS[1], sub_SARS[2], sub_SARS[3]])
 			direction.append(sub_SARS[4])
-	total_return.append(returns)
 	return returns
 
 
@@ -135,7 +170,21 @@ def update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, rewa
 
 def update_policy(ax, ay, bx, by):
 	if method == 1:  # MC algorithm
-		pass
+		q_current = Q[ax][ay][bx][by]
+		max_q_dirs = []
+		for i in range(0,len(q_current)):
+			if(q_current[i]==max(q_current)):
+				max_q_dirs.append(i)
+		if(len(max_q_dirs)==4):
+			pai[ax][ay][bx][by]=[0.25,0.25,0.25,0.25]
+		else:
+			max_q_prob = (1-epsilon)/len(max_q_dirs)
+			min_q_prob = epsilon/(4-len(max_q_dirs))
+			for i in range(0,4):
+				if(i in max_q_dirs):
+					pai[ax][ay][bx][by][i] = max_q_prob
+				else:
+					pai[ax][ay][bx][by][i] = min_q_prob
 	else:  # Q-learning
 		q_current = Q[ax][ay][bx][by]
 		max_q_index = np.argmax(q_current)
@@ -167,46 +216,19 @@ def q_learning(ax, ay, bx, by, mode, episode):
 	else:
 		return 10000
 
-
-def MCEpisode(alpha, epsilon, pai, mode='naive'):
-	SARs = []
-	ax = 0
-	bx = 0
-	ay = 0
-	by = 0
-	while ax == bx and ay == by:
-		bx = randrange(8)
-		by = randrange(8)
-		ax = randrange(8)
-		ay = randrange(8)
-	i = 0
-	while i < 1000:
-		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, pai, mode)
-		SARs.append([ax, ay, bx, by, new_dir, reward])
-		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
-			break
-		else:
-			ax = new_ax
-			ay = new_ay
-			bx = new_bx
-			by = new_by
-			i = i + 1
-	if i != 1000:
-		return MCUpdate(SARs)
-	else:
-		return 10000  # do not count this episode
-
-
 def learn(mode='naive'):
 	returns = 0
 	i = 0
 	while i < max_episode:
+		if(i%100==0):
+			print("Evaluating episode "+str(i))
 		if method == 1:
 			returns = MCEpisode(alpha, epsilon, pai, mode)
 		else:
 			returns = q_learning(ax_init, ay_init, bx_init, by_init, mode, i)
 		if returns != 10000:
-			i = i + 1
+			total_return.append(returns)
+		i = i+1
 	return returns
 
 
