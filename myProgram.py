@@ -7,25 +7,25 @@ import sys
 # import pickle
 
 # global parameters
-size = 8  # dimension of the grid
-alpha = 0.1
-epsilon = 0.1
-max_episode = 50000  # total number of episodes to train on
-method = 2  # 1 for MC, 2 for Q-Learning
+# size = 8  # dimension of the grid
+# alpha = 0.1
+# epsilon = 0.1
+# max_episode = 50000  # total number of episodes to train on
+# method = 2  # 1 for MC, 2 for Q-Learning
 gamma = 1  # no discount
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
-step_limit = 1000
+step_limit = 1000  # limit number of steps in one episode
 agent_bomb_position = []  # store agent's and bomb's position in each step under optimal policy
 direction = []  # store the agent move direction under optimal policy
 total_return = []  # total return of each episode
 
-
 # command input
-# size = int(sys.argv[1])
-# alpha = float(sys.argv[2])
-# epsilon = float(sys.argv[3])
-# max_episode = int(sys.argv[4])
-# method = int(sys.argv[5])
+# get parameter values from the command
+size = int(sys.argv[1])
+alpha = float(sys.argv[2])
+epsilon = float(sys.argv[3])
+max_episode = int(sys.argv[4])
+method = int(sys.argv[5])
 
 
 # initialize Q value function
@@ -69,39 +69,39 @@ def move(ax, ay, bx, by, mode='naive'):
 	new_ay = ay
 	new_bx = bx
 	new_by = by
-	if temp_pai[0] == 0 or temp_pai[0] == 0.25:
+	if temp_pai[0] == 0 or temp_pai[0] == 0.25:  # initial policy or equal policy
 		new_dir = randrange(4)
 	else:
 		rand = randrange(10)
 		max_prob = max(temp_pai)
-		if rand < 1:
+		if rand < epsilon * 10:  # epsilon-greedy policy, probability of epsilon to choose non-greedy action
 			sub_rand = randrange(4)
 			while temp_pai[sub_rand] == max_prob:
 				sub_rand = randrange(4)
 			new_dir = sub_rand
-		else:
+		else:  # greedy action
 			new_dir = np.argmax(temp_pai)
 	new_ax = ax + dirs[new_dir][0]
 	new_ay = ay + dirs[new_dir][1]
 	if mode == 'naive':  # reward structure 1
-		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:  # agent stay at the same place
+		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:  # agent move out the grid - stay at the same place
 			new_ax = ax
 			new_ay = ay
-		elif new_ax == bx and new_ay == by:
+		elif new_ax == bx and new_ay == by:  # agent push the bomb
 			new_bx = bx + dirs[new_dir][0]
 			new_by = by + dirs[new_dir][1]
 		return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1
 	else:  # reward structure 2
-		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:
+		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:  # agent move out the grid - stay at the same place
 			new_ax = ax
 			new_ay = ay  # back to the same place
-			return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1;  # back to the same place
-		elif new_ax == bx and new_ay == by:
+			return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1  # back to the same place
+		elif new_ax == bx and new_ay == by:  # agent push the bomb
 			new_bx = bx + dirs[new_dir][0]
 			new_by = by + dirs[new_dir][1]
-			if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
+			if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:  # bomb to the river
 				return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 10
-			else:
+			else:  # give reward according to the moving direction
 				if (abs(new_bx - (size - 1) / 2) + abs(new_by - (size - 1) / 2) > abs(bx - (size - 1) / 2) + abs(
 						by - (size - 1) / 2)):
 					return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 1
@@ -111,6 +111,7 @@ def move(ax, ay, bx, by, mode='naive'):
 			return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1
 
 
+# update results of MC algorithm
 def MCUpdate(SARS):
 	G = 0
 	while (len(SARS) > 0):
@@ -123,6 +124,7 @@ def MCUpdate(SARS):
 	return G
 
 
+# function to perform one episode of MC algorithm
 def MCEpisode(alpha, epsilon, pai, mode='naive'):
 	SARs = []
 	ax, ay, bx, by = init_position()
@@ -145,6 +147,7 @@ def MCEpisode(alpha, epsilon, pai, mode='naive'):
 		return 10000  # do not count this episode
 
 
+# function to update results of Q-learning
 def q_learning_result_update(SARS, episode):
 	returns = 0
 	for i in range(len(SARS)):
@@ -156,6 +159,7 @@ def q_learning_result_update(SARS, episode):
 	return returns
 
 
+# update Q values
 def update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward):
 	current_state_action = Q[ax][ay][bx][by][new_dir]
 	next_q = [0, 0, 0, 0] if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7 else Q[new_ax][new_ay][new_bx][
@@ -164,20 +168,21 @@ def update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, rewa
 	Q[ax][ay][bx][by][new_dir] = new_current_state_action
 
 
+# update policy
 def update_policy(ax, ay, bx, by):
 	if method == 1:  # MC algorithm
 		q_current = Q[ax][ay][bx][by]
 		max_q_dirs = []
 		for i in range(0, len(q_current)):
-			if (q_current[i] == max(q_current)):
+			if q_current[i] == max(q_current):
 				max_q_dirs.append(i)
-		if (len(max_q_dirs) == 4):
+		if len(max_q_dirs) == 4:
 			pai[ax][ay][bx][by] = [0.25, 0.25, 0.25, 0.25]
 		else:
 			max_q_prob = (1 - epsilon) / len(max_q_dirs)
 			min_q_prob = epsilon / (4 - len(max_q_dirs))
 			for i in range(0, 4):
-				if (i in max_q_dirs):
+				if i in max_q_dirs:
 					pai[ax][ay][bx][by][i] = max_q_prob
 				else:
 					pai[ax][ay][bx][by][i] = min_q_prob
@@ -254,6 +259,7 @@ def q_learning_test(ax=0, ay=2, bx=1, by=3, mode='naive'):
 		print('Fail...')
 
 
+# Q-learning algorithm
 def q_learning(mode, episode):
 	SARs = []
 	i = 0
@@ -262,7 +268,7 @@ def q_learning(mode, episode):
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
 		SARs.append([ax, ay, bx, by, new_dir, reward])
 
-		# update
+		# update Q values and policy
 		update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward)
 		update_policy(ax, ay, bx, by)
 		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
@@ -273,6 +279,7 @@ def q_learning(mode, episode):
 			bx = new_bx
 			by = new_by
 			i = i + 1
+
 	# check if run out of the steps
 	if i != step_limit:
 		return q_learning_result_update(SARs, episode)
@@ -280,6 +287,7 @@ def q_learning(mode, episode):
 		return 10000  # not count this step
 
 
+# function to run MC algorithm or Q-learning algorithm
 def learn(mode='naive'):
 	returns = 0
 	i = 0
@@ -296,6 +304,7 @@ def learn(mode='naive'):
 	return returns
 
 
+# plot total return per episode
 def plot_episode():
 	if method == 1:
 		label = 'MC'
