@@ -26,16 +26,16 @@ total_return = []  # total return of each episode
 
 
 # initialize Q value function
-def initQ(size):
-	return np.zeros((size, size, size, size, 4))
+def initQ(dimension):
+	return np.zeros((dimension, dimension, dimension, dimension, 4))
 
 
 Q = initQ(size)  # initial Q
 
 
 # initialize policy
-def initPai(size):
-	return np.zeros((size, size, size, size, 4))
+def initPai(dimension):
+	return np.zeros((dimension, dimension, dimension, dimension, 4))
 
 
 pai = initPai(size)  # initial policy
