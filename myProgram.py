@@ -6,16 +6,17 @@ import sys
 
 # global parameters
 size = 8  # dimension of the grid
-gamma = 1  # no discount
 alpha = 0.1
 epsilon = 0.1
-max_episode = 50000  # total number of episodes to train on
-method = 1  # 1 for MC, 2 for Q-Learning
+max_episode = 10000  # total number of episodes to train on
+method = 2  # 1 for MC, 2 for Q-Learning
+gamma = 1  # no discount
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
 step_limit = 1000
 agent_bomb_position = []  # store agent's and bomb's position in each step under optimal policy
 direction = []  # store the agent move direction under optimal policy
 total_return = []  # total return of each episode
+
 
 # command input
 # size = int(sys.argv[1])
@@ -58,7 +59,6 @@ def init_position():
 
 
 # initial position of agent and bomb
-
 def move(ax, ay, bx, by, mode='naive'):
 	# print("moving...")
 	temp_q = []
@@ -67,7 +67,7 @@ def move(ax, ay, bx, by, mode='naive'):
 	new_ay = ay
 	new_bx = bx
 	new_by = by
-	if (temp_pai[0] == 0 or temp_pai[0] == 0.25):
+	if temp_pai[0] == 0 or temp_pai[0] == 0.25:
 		new_dir = randrange(4)
 	else:
 		rand = randrange(10)
@@ -112,7 +112,7 @@ def move(ax, ay, bx, by, mode='naive'):
 def MCUpdate(SARS):
 	G = 0
 	while (len(SARS) > 0):
-		sub_SARS = SARS.pop();
+		sub_SARS = SARS.pop()
 		G = sub_SARS[9] + gamma * G
 		update_q_value(sub_SARS[0], sub_SARS[1], sub_SARS[2], sub_SARS[3], sub_SARS[4], sub_SARS[5], sub_SARS[6],
 		               sub_SARS[7], sub_SARS[8], sub_SARS[9])
@@ -186,16 +186,27 @@ def update_policy(ax, ay, bx, by):
 			pai[ax][ay][bx][by][i] = (1 - epsilon) if i == max_q_index else epsilon / 3
 
 
-def q_learning_test(ax, ay, bx, by, mode):
+# function to build a grid world given the position of the agent and bomb
+def set_grid_world(ax=5, ay=0, bx=4, by=1):
+	grid = np.zeros((size, size))  # init grid world
+	grid[ax][ay] = 1  # 1 for agent
+	if 0 <= bx <= size - 1 and 0 <= by <= size - 1:
+		grid[bx][by] = 9  # 9 for bomb
+	return grid
+
+
+# function q_learning_test() is to plot the optimal policy for the example shown in figure 1 in the project description
+def q_learning_test(ax=0, ay=2, bx=1, by=3, mode='naive'):
 	SARs = []
 	i = 0
 	while i < step_limit:
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
-		SARs.append([ax, ay, bx, by, new_dir, reward])
+		SARs.append([ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward])
 
-		# update
+		# update Q values and policy
 		update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward)
 		update_policy(ax, ay, bx, by)
+
 		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
 			break
 		else:  # update position
@@ -204,11 +215,41 @@ def q_learning_test(ax, ay, bx, by, mode):
 			bx = new_bx
 			by = new_by
 			i = i + 1
-	if i != 1000:
+	if i != step_limit:
+		j = 0
+
+		# init the grid world
+		grid = set_grid_world()
+		print('s{counter}:'.format(counter=j))
+		print(grid)
+
 		for SAR in SARs:
-			print(
-				'agent location {ax}, {ay}, bomb location {bx},{by}, agent take action {dir} at directions {dirs}'.format(
-					ax=SAR[0], ay=SAR[1], bx=SAR[2], by=SAR[3], dir=SAR[4], dirs=dirs))
+			# convert action from number representations to direction words
+			if SAR[4] == 0:
+				action = 'West'
+			elif SAR[4] == 1:
+				action = 'North'
+			elif SAR[4] == 2:
+				action = 'East'
+			else:
+				action = 'South'
+
+			# new position - be careful on the numpy matrix representation and real grid world coordinates
+			new_ax = SAR[5]
+			new_ay = SAR[6]
+			new_bx = SAR[7]
+			new_by = SAR[8]
+			print('a{counter}: {action}'.format(counter=j, action=action))
+
+			# print the next state
+			j += 1
+			grid = set_grid_world(size - 1 - new_ay, new_ax, size - 1 - new_by, new_bx)
+			print('s{counter}:'.format(counter=j))
+			print(grid)
+	# print('agent location ({ax}, {ay}), bomb location ({bx}, {by}), agent take action {dir} at directions {dirs}'.format(ax=SAR[0], ay=SAR[1], bx=SAR[2], by=SAR[3], dir=action, dirs=dirs))
+	# print('Directions annotation: [West, North, East, South]')
+	else:
+		print('Fail...')
 
 
 def q_learning(mode, episode):
@@ -230,18 +271,18 @@ def q_learning(mode, episode):
 			bx = new_bx
 			by = new_by
 			i = i + 1
-
-	if i != 1000:
+	# check if run out of the steps
+	if i != step_limit:
 		return q_learning_result_update(SARs, episode)
 	else:
-		return 10000
+		return 10000  # not count this step
 
 
 def learn(mode='naive'):
 	returns = 0
 	i = 0
 	while i < max_episode:
-		if (i % 100 == 0):
+		if i % 100 == 0:
 			print("Evaluating episode " + str(i))
 		if method == 1:
 			returns = MCEpisode(alpha, epsilon, pai, mode)
@@ -264,14 +305,18 @@ def plot_episode():
 	plt.ylabel('total return')
 	plt.legend()
 	plt.show()
-	print(total_return[-1])
-	print(agent_bomb_position)
-	print(direction)
+
+
+# print(total_return[-1])
+# print(agent_bomb_position)
+# print(direction)
 
 
 def main():
-	learn(mode='complex')  # run learning method
-	q_learning_test(5, 0, 4, 1, mode='complex')
+	mode_name = 'complex'  # set up reward structures: 'naive' for structure 1; 'complex' for structure 2
+	learn(mode=mode_name)  # run learning method
+	print("------------agent's path with the starts in Fig.1 in the project description------------")
+	q_learning_test(mode=mode_name)
 	plot_episode()  # plot returns for each episode
 
 
