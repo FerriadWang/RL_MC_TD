@@ -4,17 +4,6 @@ from random import randrange
 import matplotlib.pyplot as plt
 import sys
 
-<<<<<<< HEAD
-# global parameters
-size = 8  # dimension of the grid
-gamma = 1  # no discount
-alpha = 0.1
-epsilon = 0.1
-max_episode = 50000  # total number of episodes to train on
-method = 1 # 1 for MC, 2 for Q-Learning
-dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
-step_limit = 1000
-=======
 # import pickle
 
 # global parameters
@@ -26,47 +15,30 @@ step_limit = 1000
 gamma = 1  # no discount
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
 step_limit = 1000  # limit number of steps in one episode
->>>>>>> origin/ximu
 agent_bomb_position = []  # store agent's and bomb's position in each step under optimal policy
 direction = []  # store the agent move direction under optimal policy
 total_return = []  # total return of each episode
 
-<<<<<<< HEAD
-
-# command input
-=======
 # command input
 # get parameter values from the command
->>>>>>> origin/ximu
 size = int(sys.argv[1])
 alpha = float(sys.argv[2])
 epsilon = float(sys.argv[3])
 max_episode = int(sys.argv[4])
 method = int(sys.argv[5])
 
-<<<<<<< HEAD
-# initialize Q value function
-def initQ(size):
-	return np.zeros((size, size, size, size, 4))
-=======
 
 # initialize Q value function
 def initQ(dimension):
 	return np.zeros((dimension, dimension, dimension, dimension, 4))
->>>>>>> origin/ximu
 
 
 Q = initQ(size)  # initial Q
 
 
 # initialize policy
-<<<<<<< HEAD
-def initPai(size):
-	return np.zeros((size, size, size, size, 4))
-=======
 def initPai(dimension):
 	return np.zeros((dimension, dimension, dimension, dimension, 4))
->>>>>>> origin/ximu
 
 
 pai = initPai(size)  # initial policy
@@ -86,78 +58,40 @@ def init_position():
 		ax = randrange(8)
 		ay = randrange(8)
 	return ax, ay, bx, by
-<<<<<<< HEAD
-# initial position of agent and bomb
-
-def move(ax, ay, bx, by, mode='naive'):
-	#print("moving...")
-=======
 
 
 # initial position of agent and bomb
 def move(ax, ay, bx, by, mode='naive'):
 	# print("moving...")
->>>>>>> origin/ximu
 	temp_q = []
 	temp_pai = pai[ax][ay][bx][by]
 	new_ax = ax
 	new_ay = ay
 	new_bx = bx
 	new_by = by
-<<<<<<< HEAD
-	if (temp_pai[0] == 0 or temp_pai[0]==0.25):
-=======
 	if temp_pai[0] == 0 or temp_pai[0] == 0.25:  # initial policy or equal policy
->>>>>>> origin/ximu
 		new_dir = randrange(4)
 	else:
 		rand = randrange(10)
 		max_prob = max(temp_pai)
-<<<<<<< HEAD
-		if rand < 1:
-=======
 		if rand < epsilon * 10:  # epsilon-greedy policy, probability of epsilon to choose non-greedy action
->>>>>>> origin/ximu
 			sub_rand = randrange(4)
 			while temp_pai[sub_rand] == max_prob:
 				sub_rand = randrange(4)
 			new_dir = sub_rand
-<<<<<<< HEAD
-		else:
-=======
 		else:  # greedy action
->>>>>>> origin/ximu
 			new_dir = np.argmax(temp_pai)
 	new_ax = ax + dirs[new_dir][0]
 	new_ay = ay + dirs[new_dir][1]
 	if mode == 'naive':  # reward structure 1
-<<<<<<< HEAD
-		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:  # agent stay at the same place
-			new_ax = ax
-			new_ay = ay
-		elif new_ax == bx and new_ay == by:
-=======
 		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:  # agent move out the grid - stay at the same place
 			new_ax = ax
 			new_ay = ay
 		elif new_ax == bx and new_ay == by:  # agent push the bomb
->>>>>>> origin/ximu
 			new_bx = bx + dirs[new_dir][0]
 			new_by = by + dirs[new_dir][1]
 		return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1
 	else:  # reward structure 2
-<<<<<<< HEAD
-		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:
-			new_ax = ax
-			new_ay = ay  # back to the same place
-			return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1;  # back to the same place
-		elif new_ax == bx and new_ay == by:
-			new_bx = bx + dirs[new_dir][0]
-			new_by = by + dirs[new_dir][1]
-			if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
-				return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 10
-			else:
-=======
 		if new_ax < 0 or new_ay < 0 or new_ax > 7 or new_ay > 7:  # agent move out the grid - stay at the same place
 			new_ax = ax
 			new_ay = ay  # back to the same place
@@ -168,7 +102,6 @@ def move(ax, ay, bx, by, mode='naive'):
 			if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:  # bomb to the river
 				return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 10
 			else:  # give reward according to the moving direction
->>>>>>> origin/ximu
 				if (abs(new_bx - (size - 1) / 2) + abs(new_by - (size - 1) / 2) > abs(bx - (size - 1) / 2) + abs(
 						by - (size - 1) / 2)):
 					return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, 1
@@ -178,18 +111,6 @@ def move(ax, ay, bx, by, mode='naive'):
 			return ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, -1
 
 
-<<<<<<< HEAD
-def MCUpdate(SARS):
-	G = 0
-	while(len(SARS)>0):
-		sub_SARS = SARS.pop();
-		G = sub_SARS[9] + gamma * G
-		update_q_value(sub_SARS[0],sub_SARS[1],sub_SARS[2],sub_SARS[3],sub_SARS[4],sub_SARS[5],sub_SARS[6],sub_SARS[7],sub_SARS[8],sub_SARS[9])
-		update_policy(sub_SARS[0],sub_SARS[1],sub_SARS[2],sub_SARS[3])
-	#print("updated")
-	return G
-
-=======
 # update results of MC algorithm
 def MCUpdate(SARS):
 	G = 0
@@ -204,18 +125,13 @@ def MCUpdate(SARS):
 
 
 # function to perform one episode of MC algorithm
->>>>>>> origin/ximu
 def MCEpisode(alpha, epsilon, pai, mode='naive'):
 	SARs = []
 	ax, ay, bx, by = init_position()
 	i = 0
 	while i < 1000:
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
-<<<<<<< HEAD
-		#print("moved")
-=======
 		# print("moved")
->>>>>>> origin/ximu
 		SARs.append([ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward])
 		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
 			break
@@ -230,11 +146,8 @@ def MCEpisode(alpha, epsilon, pai, mode='naive'):
 	else:
 		return 10000  # do not count this episode
 
-<<<<<<< HEAD
-=======
 
 # function to update results of Q-learning
->>>>>>> origin/ximu
 def q_learning_result_update(SARS, episode):
 	returns = 0
 	for i in range(len(SARS)):
@@ -246,10 +159,7 @@ def q_learning_result_update(SARS, episode):
 	return returns
 
 
-<<<<<<< HEAD
-=======
 # update Q values
->>>>>>> origin/ximu
 def update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward):
 	current_state_action = Q[ax][ay][bx][by][new_dir]
 	next_q = [0, 0, 0, 0] if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7 else Q[new_ax][new_ay][new_bx][
@@ -258,26 +168,11 @@ def update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, rewa
 	Q[ax][ay][bx][by][new_dir] = new_current_state_action
 
 
-<<<<<<< HEAD
-=======
 # update policy
->>>>>>> origin/ximu
 def update_policy(ax, ay, bx, by):
 	if method == 1:  # MC algorithm
 		q_current = Q[ax][ay][bx][by]
 		max_q_dirs = []
-<<<<<<< HEAD
-		for i in range(0,len(q_current)):
-			if(q_current[i]==max(q_current)):
-				max_q_dirs.append(i)
-		if(len(max_q_dirs)==4):
-			pai[ax][ay][bx][by]=[0.25,0.25,0.25,0.25]
-		else:
-			max_q_prob = (1-epsilon)/len(max_q_dirs)
-			min_q_prob = epsilon/(4-len(max_q_dirs))
-			for i in range(0,4):
-				if(i in max_q_dirs):
-=======
 		for i in range(0, len(q_current)):
 			if q_current[i] == max(q_current):
 				max_q_dirs.append(i)
@@ -288,7 +183,6 @@ def update_policy(ax, ay, bx, by):
 			min_q_prob = epsilon / (4 - len(max_q_dirs))
 			for i in range(0, 4):
 				if i in max_q_dirs:
->>>>>>> origin/ximu
 					pai[ax][ay][bx][by][i] = max_q_prob
 				else:
 					pai[ax][ay][bx][by][i] = min_q_prob
@@ -298,9 +192,6 @@ def update_policy(ax, ay, bx, by):
 		for i in range(4):
 			pai[ax][ay][bx][by][i] = (1 - epsilon) if i == max_q_index else epsilon / 3
 
-<<<<<<< HEAD
-def q_learning_test(ax,ay,bx,by,mode):
-=======
 
 # function to build a grid world given the position of the agent and bomb
 def set_grid_world(ax=5, ay=0, bx=4, by=1):
@@ -313,25 +204,16 @@ def set_grid_world(ax=5, ay=0, bx=4, by=1):
 
 # function q_learning_test() is to plot the optimal policy for the example shown in figure 1 in the project description
 def q_learning_test(ax=0, ay=2, bx=1, by=3, mode='naive'):
->>>>>>> origin/ximu
 	SARs = []
 	i = 0
 	while i < step_limit:
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
-<<<<<<< HEAD
-		SARs.append([ax, ay, bx, by, new_dir, reward])
-
-		# update
-		update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward)
-		update_policy(ax, ay, bx, by)
-=======
 		SARs.append([ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward])
 
 		# update Q values and policy
 		update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward)
 		update_policy(ax, ay, bx, by)
 
->>>>>>> origin/ximu
 		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
 			break
 		else:  # update position
@@ -340,12 +222,6 @@ def q_learning_test(ax=0, ay=2, bx=1, by=3, mode='naive'):
 			bx = new_bx
 			by = new_by
 			i = i + 1
-<<<<<<< HEAD
-	if i != 1000:
-		for SAR in SARs:
-			print('agent location {ax}, {ay}, bomb location {bx},{by}, agent take action {dir} at directions {dirs}'.format(ax = SAR[0],ay = SAR[1],bx = SAR[2],by = SAR[3],dir=SAR[4],dirs = dirs))
-
-=======
 	if i != step_limit:
 		j = 0
 
@@ -384,7 +260,6 @@ def q_learning_test(ax=0, ay=2, bx=1, by=3, mode='naive'):
 
 
 # Q-learning algorithm
->>>>>>> origin/ximu
 def q_learning(mode, episode):
 	SARs = []
 	i = 0
@@ -393,11 +268,7 @@ def q_learning(mode, episode):
 		ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward = move(ax, ay, bx, by, mode)
 		SARs.append([ax, ay, bx, by, new_dir, reward])
 
-<<<<<<< HEAD
-		# update
-=======
 		# update Q values and policy
->>>>>>> origin/ximu
 		update_q_value(ax, ay, bx, by, new_dir, new_ax, new_ay, new_bx, new_by, reward)
 		update_policy(ax, ay, bx, by)
 		if new_bx < 0 or new_by < 0 or new_bx > 7 or new_by > 7:
@@ -409,13 +280,6 @@ def q_learning(mode, episode):
 			by = new_by
 			i = i + 1
 
-<<<<<<< HEAD
-	if i != 1000:
-		return q_learning_result_update(SARs, episode)
-	else:
-		return 10000
-
-=======
 	# check if run out of the steps
 	if i != step_limit:
 		return q_learning_result_update(SARs, episode)
@@ -424,36 +288,23 @@ def q_learning(mode, episode):
 
 
 # function to run MC algorithm or Q-learning algorithm
->>>>>>> origin/ximu
 def learn(mode='naive'):
 	returns = 0
 	i = 0
 	while i < max_episode:
-<<<<<<< HEAD
-		if(i%100==0):
-			print("Evaluating episode "+str(i))
-=======
 		if i % 10000 == 0:
 			print("Evaluating episode " + str(i))
->>>>>>> origin/ximu
 		if method == 1:
 			returns = MCEpisode(alpha, epsilon, pai, mode)
 		else:
 			returns = q_learning(mode, i)
 		if returns != 10000:
 			total_return.append(returns)
-<<<<<<< HEAD
-		i = i+1
-	return returns
-
-
-=======
 		i = i + 1
 	return returns
 
 
 # plot total return per episode
->>>>>>> origin/ximu
 def plot_episode():
 	if method == 1:
 		label = 'MC'
@@ -465,19 +316,6 @@ def plot_episode():
 	plt.ylabel('total return')
 	plt.legend()
 	plt.show()
-<<<<<<< HEAD
-	print(total_return[-1])
-	print(agent_bomb_position)
-	print(direction)
-
-
-def main():
-	learn(mode='complex')  # run learning method
-	q_learning_test(5,0,4,1,mode = 'complex')
-	plot_episode()  # plot returns for each episode
-
-
-=======
 
 
 # print(total_return[-1])
@@ -499,6 +337,5 @@ def main():
 # f.close()
 
 
->>>>>>> origin/ximu
 if __name__ == '__main__':
 	main()
