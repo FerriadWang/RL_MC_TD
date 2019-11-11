@@ -4,11 +4,13 @@ from random import randrange
 import matplotlib.pyplot as plt
 import sys
 
+# import pickle
+
 # global parameters
 size = 8  # dimension of the grid
 alpha = 0.1
 epsilon = 0.1
-max_episode = 10000  # total number of episodes to train on
+max_episode = 50000  # total number of episodes to train on
 method = 2  # 1 for MC, 2 for Q-Learning
 gamma = 1  # no discount
 dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]  # agent's move direction: W, N, E, S
@@ -282,7 +284,7 @@ def learn(mode='naive'):
 	returns = 0
 	i = 0
 	while i < max_episode:
-		if i % 100 == 0:
+		if i % 10000 == 0:
 			print("Evaluating episode " + str(i))
 		if method == 1:
 			returns = MCEpisode(alpha, epsilon, pai, mode)
@@ -313,11 +315,17 @@ def plot_episode():
 
 
 def main():
-	mode_name = 'complex'  # set up reward structures: 'naive' for structure 1; 'complex' for structure 2
+	mode_name = 'naive'  # set up reward structures: 'naive' for structure 1; 'complex' for structure 2
 	learn(mode=mode_name)  # run learning method
 	print("------------agent's path with the starts in Fig.1 in the project description------------")
 	q_learning_test(mode=mode_name)
 	plot_episode()  # plot returns for each episode
+
+
+# save variable for 5(c) question
+# f = open('.\\Q_naive.txt', 'wb')
+# pickle.dump(total_return, f)
+# f.close()
 
 
 if __name__ == '__main__':
